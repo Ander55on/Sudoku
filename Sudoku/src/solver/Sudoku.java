@@ -1,6 +1,4 @@
-package sudoku;
-
-import solver.SudokuSolver;
+package solver;
 
 public class Sudoku implements SudokuSolver {
 

@@ -8,8 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 
+import solver.Sudoku;
 import solver.SudokuSolver;
-import sudoku.Sudoku;
 
 class TestSudukoSolver {
 	SudokuSolver solver;
