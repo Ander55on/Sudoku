@@ -1,15 +1,21 @@
 package solver;
 
+
+
+import view.TableChangeListener;
+
 public class Sudoku implements SudokuSolver {
 
 	private final int ROWS = 9;
 	private final int COLS = 9;
 
 	private int[][] board;
+	TableChangeListener listener;
 
-	public Sudoku() {
+	public Sudoku(TableChangeListener listener) {
 		this.board = new int[ROWS][COLS];
-		clear();
+		this.listener = listener;
+
 	}
 
 	@Override
@@ -19,115 +25,68 @@ public class Sudoku implements SudokuSolver {
 				setCell(i, k, 0);
 			}
 		}
+		fireTableChanged();
 	}
 
 	@Override
 	public boolean solve() {
-
-		return solve(0, 0);
+		for (int row = 0; row < ROWS; row++) {
+			for (int col = 0; col < COLS; col++) {
+				if (!isPossible(row, col, board[row][col])) { // Checks if it breaks the soduko rules
+					return false;
+				}
+			}
+		}
+		
+			return solve(0, 0);
 	}
 
-	/*
-	 * private boolean solve(int row, int col) {
-	 * 
-	 * for(int i = row; i < ROWS; i++) {
-	 * 
-	 * for(int k = col; k < COLS; k++) {
-	 * 
-	 * int value = getCell(i,k);
-	 * 
-	 * if(value == 0) { //If the cell is empty for(int j = 1; j < 10; j++) {
-	 * 
-	 * if(isPossible(i,k,j)) { //Try to populate the cell setCell(i,k,j);
-	 * 
-	 * if(k == 8) { if(solve(row + 1, 0)) { return true; } } else { if(solve(row,
-	 * col + 1)) { return true; } } } } setCell(i,k, 0); return false; } else {
-	 * setCell(i,k,0); if(isPossible(i,k, value)) { setCell(i,k,0); if(k == 8) {
-	 * return solve(row + 1, 0); } else { return solve(row, col + 1); } } else {
-	 * return false; } }
-	 * 
-	 * }
-	 * 
-	 * }
-	 * 
-	 * return true; }
-	 */
-
-	/*
-	 * private boolean solve(int row, int col) {
-	 * 
-	 * if (row > 8) { return true; }
-	 * 
-	 * int value = getCell(row, col);
-	 * 
-	 * if (value == 0) { // empty value value = 1;
-	 * 
-	 * for (int i = value; i < 10; i++) {
-	 * 
-	 * if (isPossible(row, col, i)) { // Try to set a value according to the rules
-	 * of sudoku setCell(row, col, i); if (col == 8) { if(solve(row + 1, 0)) { //If
-	 * the recursive method return true we found a solution return true; } } else {
-	 * if(solve(row, col + 1)) { //If the recursive method return true we found a
-	 * solution return true; } } } }
-	 * 
-	 * return false; //No solution was found
-	 * 
-	 * } else { // empty cell first setCell(row, col, 0); // try if the insertion is
-	 * possible if (isPossible(row, col, value)) { setCell(row, col, value); if (col
-	 * == 8) return solve(row + 1, 0); else return solve(row, col + 1); } else {
-	 * return false; }
-	 * 
-	 * }
-	 * 
-	 * }
-	 */
-
-	private boolean solve(int row, int col) {
-		
-		if(row > 8) {
-			return true; //No more empty cells 
+	private boolean solve(int row, int column) {
+		// base case no more empty cells
+		if (row > 8) {
+			fireTableChanged();
+			return true;
 		}
 
-		if (getCell(row, col) == 0) { 	// Cell is empty
-			for (int value = 1; value < 10; value++) {
-				// Try to set a value and see if it is possible
-				// If possible set the value see if it can be solved with that value
-				if (isPossible(row, col, value)) {
-					setCell(row, col, value); 
-					if (col == 8) {
-						if(solve(row + 1, 0)) { //if we find a solution return true
-							return true;		
-						}
-					} else {
-						if(solve(row, col + 1)) {
-							return true;
-						}
-					}
-				} 
-			}
-			setCell(row, col, 0); //If we didnt find a value that was possible we set the cell to 0 and pop back
-			return false;
+		int nextRow = column == 8 ? (row + 1) : row;
+		int nextColumn = column == 8 ? 0 : (column + 1);
 
-		} else {
-			int value = getCell(row, col);
-			setCell(row, col,0);
-			if(isPossible(row, col, value)) {
-				setCell(row, col, value);				
-				if(col == 8) {
-					return solve(row + 1, 0); //If we find a solution with the given value return true
-				} else {
-					return solve(row, col + 1); //If we find a solution with the given value return true
+		if (getCell(row, column) != 0) {
+			return solve(nextRow, nextColumn);
+		}
+		// try all possible solutions
+		for (int value = 1; value <= 9; value++) {
+			if (isPossible(row, column, value)) {
+				setCell(row, column, value);
+
+				if (solve(nextRow, nextColumn)) {
+					return true; // If we find a solution with the given value return true
 				}
-			} else {
-				return false;
 			}
+			setCell(row, column, 0);
+
 		}
-	
-	
+
+		return false;
+	}
+
+	private void fireTableChanged() {
+		listener.onTableChanged();
+	}
+
+	private void fireCellChanged(int row, int col) {
+		listener.onCellChanged(row, col);
 	}
 
 	// Helper method
 	private boolean isPossible(int row, int col, int value) {
+
+		if (value == 0) {
+			setCell(row, col, value);
+			return true;
+		}
+
+		setCell(row, col, 0);
 
 		for (int i = 0; i < ROWS; i++) {
 			if (getCell(i, col) == value) {
@@ -154,7 +113,20 @@ public class Sudoku implements SudokuSolver {
 			}
 		}
 
+		setCell(row, col, value);
 		return true;
+
+	}
+
+	public void print() {
+		for (int row = 0; row < ROWS; row++) {
+			for (int col = 0; col < COLS; col++) {
+				System.out.print(board[row][col] + " ");
+				if (col == 8) {
+					System.out.println();
+				}
+			}
+		}
 	}
 
 	@Override
