@@ -10,6 +10,7 @@ import org.junit.jupiter.api.function.Executable;
 
 import solver.Sudoku;
 import solver.SudokuSolver;
+import view.SudokuBoard;
 
 class TestSudukoSolver {
 	SudokuSolver solver;
@@ -17,7 +18,7 @@ class TestSudukoSolver {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		solver = new Sudoku();
+		solver = new Sudoku(new SudokuBoard());
 	}
 
 	@AfterEach
@@ -69,6 +70,45 @@ class TestSudukoSolver {
 		
 		assertTrue(solver.solve());
 	} 
+	
+	@Test
+	void testWeeklyExtremeSuduko() {
+		solver.setCell(0, 0, 9);
+		solver.setCell(0, 1, 8);
+		solver.setCell(0, 3, 7);
+		solver.setCell(0, 6, 6);
+		
+		solver.setCell(1, 0, 7);
+		solver.setCell(1, 1, 5);
+		solver.setCell(1, 7, 9);
+		
+		solver.setCell(2, 2, 6);
+		
+		solver.setCell(3, 0, 6);
+		solver.setCell(3, 1, 4);
+		
+		solver.setCell(4, 2, 9);
+		solver.setCell(4, 3, 6);
+		solver.setCell(4, 7, 5);
+		
+		solver.setCell(5, 5, 3);
+		
+		solver.setCell(6, 2, 7);
+		solver.setCell(6, 3, 9);
+		solver.setCell(6, 7, 8);
+		solver.setCell(6, 8, 3);
+		
+		solver.setCell(7, 2, 5);
+		solver.setCell(7, 3, 8);
+		solver.setCell(7, 6, 9);
+		solver.setCell(7, 7, 6);
+		
+		solver.setCell(8, 4, 2);
+		solver.setCell(8, 8, 1);
+		
+		assertTrue(solver.solve());
+		
+	}
 	
 	
 	/*
