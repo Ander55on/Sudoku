@@ -23,9 +23,9 @@ public class Sudoku implements SudokuSolver {
 		for (int i = 0; i < 9; i++) {
 			for (int k = 0; k < 9; k++) {
 				setCell(i, k, 0);
+				fireCellChanged(i,k, 0);
 			}
 		}
-		fireTableChanged();
 	}
 
 	@Override
@@ -44,7 +44,6 @@ public class Sudoku implements SudokuSolver {
 	private boolean solve(int row, int column) {
 		// base case no more empty cells
 		if (row > 8) {
-			fireTableChanged();
 			return true;
 		}
 
@@ -58,24 +57,23 @@ public class Sudoku implements SudokuSolver {
 		for (int value = 1; value <= 9; value++) {
 			if (isPossible(row, column, value)) {
 				setCell(row, column, value);
+				fireCellChanged(row, column, value);
 
 				if (solve(nextRow, nextColumn)) {
 					return true; // If we find a solution with the given value return true
 				}
 			}
 			setCell(row, column, 0);
+			fireCellChanged(row, column, 0);
 
 		}
 
 		return false;
 	}
 
-	private void fireTableChanged() {
-		listener.onTableChanged();
-	}
-
-	private void fireCellChanged(int row, int col) {
-		listener.onCellChanged(row, col);
+	
+	private void fireCellChanged(int row, int col, int value) {
+		listener.onCellChanged(row, col, value);
 	}
 
 	// Helper method
@@ -118,16 +116,6 @@ public class Sudoku implements SudokuSolver {
 
 	}
 
-	public void print() {
-		for (int row = 0; row < ROWS; row++) {
-			for (int col = 0; col < COLS; col++) {
-				System.out.print(board[row][col] + " ");
-				if (col == 8) {
-					System.out.println();
-				}
-			}
-		}
-	}
 
 	@Override
 	public void setCell(int row, int col, int val) throws IllegalArgumentException {

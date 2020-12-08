@@ -8,9 +8,12 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -33,11 +36,15 @@ public class SudokuBoard implements TableChangeListener {
 	private final int vgap = 5;
 	private final int SIZE = 9;
 
+	private JCheckBox animationCheckBox;
+
 	private int width = 500;
 	private int height = 500;
 
 	private SudokuSolver sudoku;
 	private JTextField[][] textCells;
+
+	private Thread thread;
 
 	public SudokuBoard() {
 		sudoku = new Sudoku(this);
@@ -50,7 +57,7 @@ public class SudokuBoard implements TableChangeListener {
 	}
 
 	private void createWindow() {
-		frame = new JFrame();
+		frame = new JFrame("SudokuSolver");
 		frame.setPreferredSize(new Dimension(width, height));
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -129,21 +136,43 @@ public class SudokuBoard implements TableChangeListener {
 	}
 
 	private void createButtons() {
+		animationCheckBox = new JCheckBox("Animation");
+		animationCheckBox.setMnemonic(KeyEvent.VK_C);
+		animationCheckBox.setSelected(true);
 		JButton solveButton = new JButton("Solve");
 		JButton clearButton = new JButton("Clear");
 
 		solveButton.addActionListener((e) -> {
-			for(int row = 0; row < SIZE; row++) {
-				for(int col = 0; col < SIZE; col++) {
+			for (int row = 0; row < SIZE; row++) {
+				for (int col = 0; col < SIZE; col++) {
 					String text = textCells[row][col].getText();
 					int value = 0;
-					if(!text.isEmpty()) {
+					if (!text.isEmpty()) {
+						textCells[row][col].setForeground(Color.GREEN);
 						value = Integer.parseInt(text);
 					}
 					sudoku.setCell(row, col, value);
 				}
 			}
-				sudoku.solve();		
+			
+			if (animationCheckBox.isSelected()) {
+				thread = new Thread(() -> {
+					if (!sudoku.solve()) {
+						JOptionPane.showMessageDialog(null, "Unsolvable", "Sudoku", JOptionPane.ERROR_MESSAGE);
+					}					
+					setFontColorBlack();
+				});
+				thread.start();
+				thread = null;
+			} else {
+				if (!sudoku.solve()) {
+					JOptionPane.showMessageDialog(null, "Unsolvable", "Sudoku", JOptionPane.ERROR_MESSAGE);
+					
+				}	
+				setFontColorBlack();
+				
+			}
+
 		});
 
 		clearButton.addActionListener((e) -> {
@@ -151,8 +180,18 @@ public class SudokuBoard implements TableChangeListener {
 
 		});
 
+		buttonPanel.add(animationCheckBox);
 		buttonPanel.add(solveButton);
 		buttonPanel.add(clearButton);
+
+	}
+	
+	private void setFontColorBlack() {
+		for(int row = 0; row < SIZE; row++) {
+			for (int column = 0; column < SIZE; column++) {
+				textCells[row][column].setForeground(Color.BLACK);
+			}
+		}
 	}
 
 	@SuppressWarnings("serial")
@@ -172,10 +211,10 @@ public class SudokuBoard implements TableChangeListener {
 				super.insertString(offset, str, attr);
 			}
 
-		}	
+		}
 
 	}
-	
+
 	private boolean isStringInt(String s) {
 		try {
 			Integer.parseInt(s);
@@ -186,25 +225,22 @@ public class SudokuBoard implements TableChangeListener {
 	}
 
 	@Override
-	public void onTableChanged() {
-		for(int row = 0; row < SIZE; row++)
-			for(int col = 0; col < SIZE; col++) {
-				String valueStringRepresentation = "";
-				Integer value = sudoku.getCell(row, col);
-				if(value != 0) {
-					valueStringRepresentation = value.toString();
-				}
-				textCells[row][col].setText(valueStringRepresentation);
-			}
-	}
+	public void onCellChanged(int row, int col, int value) {
+		String text = "";
 
-	@Override
-	public void onCellChanged(int row, int col) {
-		Integer value = sudoku.getCell(row, col);
-		textCells[row][col].setText(value.toString());
-		textCells[row][col].repaint();
+		if (value != 0) {
+			text = Integer.toString(value);
+		}
+		textCells[row][col].setText(text);
+
+		if (animationCheckBox.isSelected()) {
+			try {
+				thread.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
-	
-	
 
 }
